@@ -71,22 +71,22 @@ Header yang digunakan:
 
 Response success:
 
-json
+```json
 {
   "status": "success",
   "message": "Pesan deskriptif",
   "data": { }
 }
-
+```
 
 Response error:
 
-json
+```json
 {
   "status": "error",
   "message": "Pesan error"
 }
-
+```
 
 ---
 
@@ -104,7 +104,7 @@ GET /api/wallet/inquiry/1
 
 Response success:
 
-json
+```json
 {
   "status": "success",
   "message": "Inquiry balance berhasil.",
@@ -114,16 +114,16 @@ json
     "balance": 500000
   }
 }
-
+```
 
 Jika member tidak ditemukan:
 
-json
+```json
 {
   "status": "error",
   "message": "Member tidak ditemukan."
 }
-
+```
 
 ---
 
@@ -136,16 +136,16 @@ POST /api/wallet/deposit
 
 Contoh request:
 
-json
+```json
 {
   "member_id": 1,
   "amount": 100000
 }
-
+```
 
 Response success:
 
-json
+```json
 {
   "status": "success",
   "message": "Deposit berhasil.",
@@ -157,16 +157,16 @@ json
     "balance_after": 600000
   }
 }
-
+```
 
 Jika validasi gagal:
 
-json
+```json
 {
   "status": "error",
   "message": "The amount field must be at least 1000."
 }
-
+```
 
 ---
 
@@ -179,16 +179,16 @@ POST /api/wallet/withdraw
 
 Contoh request:
 
-json
+```json
 {
   "member_id": 1,
   "amount": 50000
 }
-
+```
 
 Response success:
 
-json
+```json
 {
   "status": "success",
   "message": "Withdraw berhasil.",
@@ -200,24 +200,25 @@ json
     "balance_after": 550000
   }
 }
-
+```
 
 Jika saldo tidak mencukupi:
 
-json
+```json
 {
   "status": "error",
   "message": "Saldo tidak mencukupi untuk melakukan penarikan."
 }
-
+```
 
 Jika member tidak ditemukan:
 
-json
+```json
 {
   "status": "error",
   "message": "Member tidak ditemukan."
 }
+```
 
 ---
 
@@ -236,23 +237,28 @@ Project ini menggunakan Laravel Sail (Docker), sehingga tidak perlu install PHP 
 
 Langkah menjalankan:
 
+```bash
 cp .env.example .env
 composer install
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan key:generate
+```
 
-Setelah itu, sesuaikan konfigurasi database di file .env agar sesuai dengan service yang ada di Docker.
+Setelah itu, sesuaikan konfigurasi database di file `.env` agar sesuai dengan service yang ada di Docker.
 
 Contoh konfigurasi yang digunakan:
 
+```env
 DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
 DB_DATABASE=laravel
 DB_USERNAME=laravel
 DB_PASSWORD=secret
+```
 
 Selanjutnya jalankan migration dan seeder:
 
+```bash
 ./vendor/bin/sail artisan migrate --seed
-
+```
