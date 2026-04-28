@@ -1,58 +1,258 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# API Wallet
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Project ini merupakan API sederhana untuk menangani transaksi member, meliputi:
 
-## About Laravel
+* Cek saldo (inquiry)
+* Deposit (penambahan saldo)
+* Withdraw (penarikan saldo)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Tujuan utama dari project ini adalah memastikan proses transaksi berjalan dengan aman, terutama untuk mencegah saldo menjadi tidak konsisten saat ada request bersamaan.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Struktur Database
 
-## Learning Laravel
+Dalam implementasi ini saya menggunakan dua tabel utama, yaitu `members` dan `transactions`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Tabel members
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Tabel ini digunakan untuk menyimpan data member dan saldo aktifnya.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Struktur kolom:
 
-## Agentic Development
+* id | BIGINT UNSIGNED | primary key, auto increment
+* name | VARCHAR(255) | menyimpan nama member
+* balance | DECIMAL(15,2) | menyimpan saldo aktif member
+* created_at | TIMESTAMP | waktu data dibuat
+* updated_at | TIMESTAMP | waktu terakhir data diperbarui
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Catatan:
+Saldo menggunakan tipe DECIMAL(15,2) karena lebih aman untuk data keuangan. Tipe seperti FLOAT bisa menyebabkan pembulatan yang tidak akurat.
 
-```bash
-composer require laravel/boost --dev
+---
 
-php artisan boost:install
-```
+### Tabel transactions
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Tabel ini digunakan untuk mencatat semua aktivitas transaksi (deposit dan withdraw).
 
-## Contributing
+Struktur kolom:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+* id | BIGINT UNSIGNED | primary key
+* member_id | BIGINT UNSIGNED | relasi ke tabel members
+* type | ENUM (deposit / withdraw) | jenis transaksi
+* amount | DECIMAL(15,2) | nominal transaksi
+* balance_before | DECIMAL(15,2) | saldo sebelum transaksi
+* balance_after | DECIMAL(15,2) | saldo setelah transaksi
+* created_at | TIMESTAMP | waktu transaksi dilakukan
 
-## Code of Conduct
+Catatan:
+Saya menyimpan balance_before dan balance_after untuk kebutuhan audit. Dengan cara ini, histori perubahan saldo bisa ditelusuri dengan jelas tanpa perlu menghitung ulang dari awal.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Relasi:
+Satu member dapat memiliki banyak transaksi, dan setiap transaksi hanya dimiliki oleh satu member.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## API Documentation
 
-## License
+Base URL:
+http://localhost/api
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Semua request dan response menggunakan format JSON.
+
+Header yang digunakan:
+
+* Content-Type: application/json
+* Accept: application/json
+
+---
+
+## Format Response
+
+Response success:
+
+json
+{
+  "status": "success",
+  "message": "Pesan deskriptif",
+  "data": { }
+}
+
+
+Response error:
+
+json
+{
+  "status": "error",
+  "message": "Pesan error"
+}
+
+
+---
+
+## Endpoint
+
+### 1. Inquiry Balance
+
+Endpoint ini digunakan untuk mengecek saldo member.
+
+Method:
+GET /api/wallet/inquiry/{member_id}
+
+Contoh request:
+GET /api/wallet/inquiry/1
+
+Response success:
+
+json
+{
+  "status": "success",
+  "message": "Inquiry balance berhasil.",
+  "data": {
+    "member_id": 1,
+    "name": "Budi Indonesia",
+    "balance": 500000
+  }
+}
+
+
+Jika member tidak ditemukan:
+
+json
+{
+  "status": "error",
+  "message": "Member tidak ditemukan."
+}
+
+
+---
+
+### 2. Deposit
+
+Endpoint ini digunakan untuk menambahkan saldo member.
+
+Method:
+POST /api/wallet/deposit
+
+Contoh request:
+
+json
+{
+  "member_id": 1,
+  "amount": 100000
+}
+
+
+Response success:
+
+json
+{
+  "status": "success",
+  "message": "Deposit berhasil.",
+  "data": {
+    "member_id": 1,
+    "name": "Budi Indonesia",
+    "amount": 100000,
+    "balance_before": 500000,
+    "balance_after": 600000
+  }
+}
+
+
+Jika validasi gagal:
+
+json
+{
+  "status": "error",
+  "message": "The amount field must be at least 1000."
+}
+
+
+---
+
+### 3. Withdraw
+
+Endpoint ini digunakan untuk menarik saldo member.
+
+Method:
+POST /api/wallet/withdraw
+
+Contoh request:
+
+json
+{
+  "member_id": 1,
+  "amount": 50000
+}
+
+
+Response success:
+
+json
+{
+  "status": "success",
+  "message": "Withdraw berhasil.",
+  "data": {
+    "member_id": 1,
+    "name": "Budi Indonesia",
+    "amount": 50000,
+    "balance_before": 600000,
+    "balance_after": 550000
+  }
+}
+
+
+Jika saldo tidak mencukupi:
+
+json
+{
+  "status": "error",
+  "message": "Saldo tidak mencukupi untuk melakukan penarikan."
+}
+
+
+Jika member tidak ditemukan:
+
+json
+{
+  "status": "error",
+  "message": "Member tidak ditemukan."
+}
+
+---
+
+## Catatan Implementasi
+
+* Setiap transaksi disimpan ke tabel transactions
+* Saldo tidak boleh minus
+* Menggunakan database transaction untuk menjaga konsistensi data
+* Menggunakan locking (lockForUpdate) untuk menghindari race condition saat ada request bersamaan
+
+---
+
+## Cara Menjalankan Project
+
+Project ini menggunakan Laravel Sail (Docker), sehingga tidak perlu install PHP atau database secara manual.
+
+Langkah menjalankan:
+
+cp .env.example .env
+composer install
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan key:generate
+
+Setelah itu, sesuaikan konfigurasi database di file .env agar sesuai dengan service yang ada di Docker.
+
+Contoh konfigurasi yang digunakan:
+
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=laravel
+DB_PASSWORD=secret
+
+Selanjutnya jalankan migration dan seeder:
+
+./vendor/bin/sail artisan migrate --seed
+
